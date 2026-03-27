@@ -1,139 +1,118 @@
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 
-import 'package:firebase_core/firebase_core.dart'; 
+import 'package:firebase_core/firebase_core.dart';
 
-import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
 
-import 'firebase_options.dart'; 
+import 'firebase_options.dart';
 
-import 'login.dart'; 
+import 'login.dart';
 
-import 'welcome.dart'; 
+import 'welcome.dart';
 
- 
+import 'notes.dart';
 
-Future<void> main() async { 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
- WidgetsFlutterBinding.ensureInitialized(); 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
- await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); 
+  runApp(const MyApp());
+}
 
- runApp(const MyApp()); 
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-} 
+  // This widget is the root of your application.
 
- 
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Firebase App',
 
-class MyApp extends StatelessWidget { 
+      theme: ThemeData(primarySwatch: Colors.indigo),
 
- const MyApp({super.key}); 
+      home: const AuthGate(),
+    );
+  }
+}
 
- // This widget is the root of your application. 
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
- @override 
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
 
- Widget build(BuildContext context) { 
+      builder: (_, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-   return MaterialApp( 
+        final user = snap.data;
 
-     title: 'Firebase App', 
+        return user == null ? const LoginPage() : const HomePage();
+      },
+    );
+  }
+}
 
-     theme: ThemeData(primarySwatch: Colors.indigo), 
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
-     home: const AuthGate(), 
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
 
-   ); 
+    return Scaffold(
+      appBar: AppBar(title: const Text("Home")),
 
- } 
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
 
-} 
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(user?.displayName ?? "Usuário"),
 
- 
+              accountEmail: Text(user?.email ?? ""),
 
-class AuthGate extends StatelessWidget { 
+              currentAccountPicture: const CircleAvatar(
+                child: Icon(Icons.person),
+              ),
+            ),
 
- const AuthGate({super.key}); 
+            ListTile(
+              leading: const Icon(Icons.note),
 
- @override 
+              title: const Text('Anotações'),
 
- Widget build(BuildContext context) { 
+              onTap: () async {
+                Navigator.push(
+                  context,
 
-   return StreamBuilder<User?>( 
+                  MaterialPageRoute(builder: (_) => const NotesPage()),
+                );
+              },
+            ),
 
-     stream: FirebaseAuth.instance.authStateChanges(), 
-
-     builder: (_, snap) { 
-
-       if (snap.connectionState == ConnectionState.waiting) { 
-
-         return const Scaffold( 
-
-           body: Center(child: CircularProgressIndicator()), 
-
-         ); 
-
-       } 
-
-       final user = snap.data; 
-
-       return user == null ? const LoginPage() : const HomePage(); 
-
-     }, 
-
-   ); 
-
- } 
-
-} 
-
- 
-
-class HomePage extends StatelessWidget { 
-
- const HomePage({super.key}); 
-
- 
-
- @override 
-
- Widget build(BuildContext context) { 
-
-   return Scaffold( 
-
-     appBar: AppBar(title: const Text("Home")), 
-
-     drawer: Drawer( 
-
-       child: ListView( 
-
-         padding: EdgeInsets.zero, 
-
-         children: [ 
-
-           ListTile( 
-
-             leading: const Icon(Icons.logout), 
-
-             title: const Text('Sair'), 
-
-             onTap: () async { 
-
-               await FirebaseAuth.instance.signOut(); 
-
-             }, 
-
-           ), 
-
-         ], 
-
-       ), 
-
-     ), 
-
-     body: const Center(child: WelcomeMessage()), 
-
-   ); 
-
- } 
-
-} 
+            ListTile(
+              leading: const Icon(Icons.logout),
+
+              title: const Text('Sair'),
+
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+              },
+            ),
+          ],
+        ),
+      ),
+
+      body: const Center(child: WelcomeMessage()),
+    );
+  }
+}

@@ -140,11 +140,13 @@ class _LoginPageState extends State<LoginPage> {
 
          constraints: const BoxConstraints(maxWidth: 460), 
 
-         child: Padding( 
+         child: SingleChildScrollView( 
 
-           padding: const EdgeInsets.all(16), 
+           child: Padding( 
 
-           child: Column( 
+            padding: const EdgeInsets.all(16),
+
+            child: Column(
 
              children: [ 
 
@@ -288,7 +290,8 @@ class _LoginPageState extends State<LoginPage> {
 
                  ), 
 
-             ], 
+             ],
+            ), 
 
            ), 
 
