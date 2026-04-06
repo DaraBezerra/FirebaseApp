@@ -1,25 +1,36 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_core/firebase_core.dart'; 
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'; 
 
-import 'firebase_options.dart';
+import 'package:permission_handler/permission_handler.dart'; 
 
-import 'login.dart';
+import 'firebase_options.dart'; 
 
-import 'welcome.dart';
+import 'login.dart'; 
 
-import 'notes.dart';
+import 'welcome.dart'; 
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+import 'notes.dart'; 
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+import 'notifications.dart'; 
 
-  runApp(const MyApp());
-}
+ 
 
+Future<void> main() async { 
+
+ WidgetsFlutterBinding.ensureInitialized(); 
+
+ await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); 
+
+ await Notifications.init(); 
+
+ await Permission.notification.request(); 
+
+ runApp(const MyApp()); 
+
+} 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

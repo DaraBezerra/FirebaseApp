@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'notifications.dart';
+
+
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
 
@@ -55,16 +58,23 @@ class _NotesPageState extends State<NotesPage> {
 
     setState(() {
       loading = true;
-
       message = null;
     });
 
     try {
-      await _col.add({
-        'description': text,
+      await _col
+          .add({'description': text, 'createdAt': FieldValue.serverTimestamp()})
+          .then(
+            (note) => Notifications.show(
+              id: note.id.hashCode,
 
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+              title: 'Nota criada',
+
+              body: text,
+
+              payload: note.id,
+            ),
+          );
 
       createController.clear();
     } catch (e) {
