@@ -14,6 +14,8 @@ import 'package:http/http.dart' as http;
 
 import 'package:geoflutterfire_plus/geoflutterfire_plus.dart'; 
 
+import 'package:geolocator/geolocator.dart'; 
+
  
 
 enum MapEditorMode { initial, finalPoint } 
@@ -184,6 +186,14 @@ class _MapViewerEditorPageState extends State<MapViewerEditorPage> {
 
  
 
+     if (_initialPoint == null) { 
+
+       await _setInitialFromGPS(); 
+
+     } 
+
+ 
+
      if (_initialPoint != null && _finalPoint != null) { 
 
        await _fetchRoute(_initialPoint!, _finalPoint!); 
@@ -203,6 +213,86 @@ class _MapViewerEditorPageState extends State<MapViewerEditorPage> {
      } 
 
    }); 
+
+ } 
+
+ 
+
+ Future<void> _setInitialFromGPS() async { 
+
+   final permission = await _ensureLocationPermission(); 
+
+   if (!permission) return; 
+
+   try { 
+
+     final pos = await Geolocator.getCurrentPosition(); 
+
+     final p = ll.LatLng(pos.latitude, pos.longitude); 
+
+     setState(() { 
+
+       _initialPoint = p; 
+
+       if (_zoom <= _worldZoom) _zoom = 14; 
+
+     }); 
+
+     _safeMove(p, _zoom); 
+
+   } catch (_) {} 
+
+ } 
+
+ 
+
+ Future<bool> _ensureLocationPermission() async { 
+
+   final enabled = await Geolocator.isLocationServiceEnabled(); 
+
+   if (!enabled) { 
+
+     if (mounted) { 
+
+       ScaffoldMessenger.of(context).showSnackBar( 
+
+         const SnackBar(content: Text('Serviço de localização desativado.')), 
+
+       ); 
+
+     } 
+
+     return false; 
+
+   } 
+
+   LocationPermission permission = await Geolocator.checkPermission(); 
+
+   if (permission == LocationPermission.denied) { 
+
+     permission = await Geolocator.requestPermission(); 
+
+   } 
+
+   if (permission == LocationPermission.denied || 
+
+       permission == LocationPermission.deniedForever) { 
+
+     if (mounted) { 
+
+       ScaffoldMessenger.of(context).showSnackBar( 
+
+         const SnackBar(content: Text('Permissão de localização negada.')), 
+
+       ); 
+
+     } 
+
+     return false; 
+
+   } 
+
+   return true; 
 
  } 
 
@@ -353,10 +443,8 @@ class _MapViewerEditorPageState extends State<MapViewerEditorPage> {
      final resp = await http.get( 
 
        uri, 
-       headers: const {
-        'User-Agent': 'FirebaseApp/1.0 (dara.lima211@gmail.com)',
-        'Accept': 'application/json',
-        },
+
+       headers: const {"Accept": "application/json"}, 
 
      ); 
 
