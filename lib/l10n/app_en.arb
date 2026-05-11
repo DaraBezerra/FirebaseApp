@@ -1,0 +1,13 @@
+{ 
+
+    "@@locale": "en", 
+
+    "notes": "Notes", 
+
+    "@notes": { 
+
+        "description": "The notes title." 
+
+    } 
+
+} 
